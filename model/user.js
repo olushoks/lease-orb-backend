@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const { leaseSchema } = require("./lease");
 const Joi = require("joi");
 
 const userSchema = new mongoose.Schema({
@@ -14,6 +15,8 @@ const userSchema = new mongoose.Schema({
     minlength: 8,
     required: true,
   },
+  listedLease: { type: [leaseSchema], default: [] },
+  messages: {},
 });
 
 const User = mongoose.model("User", userSchema);
