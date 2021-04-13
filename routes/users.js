@@ -23,6 +23,7 @@ router.post("/sign-up", async (req, res) => {
       password: await bcrypt.hash(req.body.password, salt),
     });
     await user.save();
+
     return res.send(user);
   } catch (error) {
     return res.status(500).send(`Internal Server Error: ${error}`);
