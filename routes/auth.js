@@ -27,7 +27,7 @@ router.post("/sign-in", async (req, res) => {
 
     return res
       .header("x-auth-token", token)
-      .header("access-control-expose-headers", "x--auth-token")
+      .header("access-control-expose-headers", "x-auth-token")
       .send({ _id: user._id, username: user.username });
   } catch (error) {
     return res.status(500).send(`Internal Server Error: ${error}`);

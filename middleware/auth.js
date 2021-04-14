@@ -7,7 +7,7 @@ const auth = (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, config.get("jwtSecret"));
-    req, (user = decoded);
+    req.user = decoded;
     return next();
   } catch (error) {
     return res.status(400).send(`Invalid token`);
