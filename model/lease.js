@@ -23,10 +23,12 @@ const validateLease = (lease) => {
     postedBy: Joi.string().required(),
     name: Joi.string().required(),
     availableDate: Joi.date().required(),
+    apartmentType: Joi.string(),
     rentPerMonth: Joi.number().required(),
     city: Joi.string().min(3).required(),
     state: Joi.string().min(2).required(),
     zipCode: Joi.string().min(5).max(10).required(),
+    additionalInfo: Joi.string(),
   });
   return schema.validate(lease);
 };
