@@ -2,6 +2,8 @@ const mongoose = require("mongoose");
 const { leaseSchema } = require("./lease");
 const { messageSchema } = require("./message");
 const Joi = require("joi");
+const jwt = require("jsonwebtoken");
+const config = require("config");
 
 const userSchema = new mongoose.Schema({
   username: {
@@ -19,6 +21,14 @@ const userSchema = new mongoose.Schema({
   listedLease: { type: [leaseSchema], default: [] },
   messages: { type: [messageSchema], default: [] },
 });
+
+// METHOD TO GENERATE JWT TOKEN
+userSchema.methods.generateAuthToken = () => {
+  return jwt.sign(
+    { _id: this._id, username: this.username },
+    config.get("jwtSecret")
+  );
+};
 
 const User = mongoose.model("User", userSchema);
 

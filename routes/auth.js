@@ -2,7 +2,6 @@ const express = require("express");
 const router = express.Router();
 const bcrypt = require("bcrypt");
 const Joi = require("joi");
-
 const { User } = require("../model/user");
 
 // USER SIGN IN
@@ -24,7 +23,12 @@ router.post("/sign-in", async (req, res) => {
     if (!validPassword)
       return res.status(400).send(`Invalid username or password`);
 
-    return res.send(user);
+    const token = user.generateAuthToken();
+
+    return res
+      .header("x-auth-token", token)
+      .header("access-control-expose-headers", "x--auth-token")
+      .send({ _id: user._id, username: user.username });
   } catch (error) {
     return res.status(500).send(`Internal Server Error: ${error}`);
   }
