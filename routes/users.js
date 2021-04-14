@@ -56,10 +56,41 @@ router.post("/:user/list-lease", auth, async (req, res) => {
       additionalInfo: req.body.additionalInfo,
     });
 
+    await lease.save();
+
     user.listedLease.push(lease);
     await user.save();
 
-    return res.send(user);
+    return res.send(lease);
+  } catch (error) {
+    return res.status(500).send(`Internal Server Error:: ${error}`);
+  }
+});
+
+// EDIT LISTED LEASE
+router.put("/:user/edit-lease/:id", auth, async (req, res) => {
+  try {
+    const { error } = validateLease(req.body);
+    if (error) return res.status(400).send(error.details[0].message);
+
+    const user = await User.findOne({ username: req.params.user });
+
+    const lease = user.listedLease.id(req.params.id);
+
+    // UPDATE LEASE DETALS
+    lease.postedBy = req.body.postedBy;
+    lease.name = req.body.name;
+    lease.availableDate = req.body.availableDate;
+    lease.apartmentType = req.body.apartmentType;
+    lease.rentPerMonth = req.body.rentPerMonth;
+    lease.city = req.body.city;
+    lease.state = req.body.state;
+    lease.zipCode = req.body.zipCode;
+    lease.additionalInfo = req.body.additionalInfo;
+
+    await user.save();
+
+    return res.send(lease);
   } catch (error) {
     return res.status(500).send(`Internal Server Error:: ${error}`);
   }
