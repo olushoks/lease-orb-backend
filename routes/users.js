@@ -96,4 +96,18 @@ router.put("/:user/edit-lease/:id", auth, async (req, res) => {
   }
 });
 
+// SEARCH AVAILABLE LEASE
+router.get("/:user/search-lease/:criteria", async (req, res) => {
+  try {
+    const leases = await Lease.find().or([
+      { zipCode: req.params.criteria },
+      { city: req.params.criteria },
+    ]);
+
+    return res.send(leases);
+  } catch (error) {
+    return res.status(500).send(`Internal Server Error:: ${error}`);
+  }
+});
+
 module.exports = router;
