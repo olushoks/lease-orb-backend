@@ -111,8 +111,6 @@ router.put("/:user/edit-lease/:leaseId", auth, async (req, res) => {
   }
 });
 
-// DELETE
-
 // SEARCH AVAILABLE LEASE
 router.get("/:user/search-lease/:criteria", async (req, res) => {
   try {
@@ -128,7 +126,7 @@ router.get("/:user/search-lease/:criteria", async (req, res) => {
 });
 
 // SHOW INTEREST IN A LEASE
-router.get("/:user/show-interest/:leaseId", auth, async (req, res) => {
+router.get("/:user/showInterest/:leaseId", auth, async (req, res) => {
   try {
     const user = await User.findOne({ username: req.params.user }).select({
       password: 0,
@@ -141,14 +139,39 @@ router.get("/:user/show-interest/:leaseId", auth, async (req, res) => {
         `This lease is already in the leases you showed interest in`
       );
 
-    user.leaseInterestedIn.push(lease);
-    // user.leaseInterestedIn.includes(lease) ||
-    //   user.leaseInterestedIn.push(lease);
+    //user.leaseInterestedIn.push(lease);
+    user.leaseInterestedIn = [...user.leaseInterestedIn, lease];
     user.save();
 
     return res.send(user);
   } catch (error) {
     return res.status(500).send(`Internal Error: ${error}`);
+  }
+});
+
+// REMOVE LEASE FROM LEASES INTERESTED IN
+router.delete("/:user/withdraw-interest/:leaseId", auth, async (req, res) => {
+  try {
+    const user = await User.findOne({ username: req.params.user });
+    // const lease = user.leaseInterestedIn.id(req.params.leaseId);
+    const leaseToWithdraw = user.leaseInterestedIn.findOne({
+      _id: req.params.leaseiD,
+    });
+    // const newInterestedIn = user.leaseInterestedIn.filter((el) => {
+    //   // if (el !== req.params.leaseId) return true;
+    //   return true;
+    // });
+
+    //user.leaseInterestedIn = [...newInterestedIn];
+
+    // if (!lease)
+    //   return res.status(400).send(`This lease does not exist in your profile`);
+
+    //await leaseToWithdraw.remove();
+    user.save();
+    return res.send(leaseToWithdraw);
+  } catch (error) {
+    return res.status(500).send(`Internal Server Error: ${error}`);
   }
 });
 
