@@ -1,11 +1,12 @@
 const mongoose = require("mongoose");
-const { leaseSchema } = require("./lease");
+const { Lease } = require("./lease");
 const { messageSchema } = require("./message");
 const Joi = require("joi");
 const jwt = require("jsonwebtoken");
 const config = require("config");
 
 const userSchema = new mongoose.Schema({
+  _id: mongoose.Schema.Types.ObjectId,
   username: {
     type: String,
     minlength: 6,
@@ -18,7 +19,7 @@ const userSchema = new mongoose.Schema({
     minlength: 8,
     required: true,
   },
-  listedLease: { type: [leaseSchema], default: [] },
+  listedLease: [{ type: mongoose.Schema.Types.ObjectId, ref: "Lease" }],
   messages: { type: [messageSchema], default: [] },
 });
 

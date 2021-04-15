@@ -1,6 +1,8 @@
 const mongoose = require("mongoose");
 const Joi = require("joi");
 
+const User = require("./user");
+
 const leaseSchema = new mongoose.Schema({
   postedBy: { type: String, required: true },
   name: { type: String, required: true },
@@ -20,7 +22,6 @@ const Lease = mongoose.model("Lease", leaseSchema);
 // VALIDATION FUNCTION
 const validateLease = (lease) => {
   const schema = Joi.object({
-    postedBy: Joi.string().required(),
     name: Joi.string().required(),
     availableDate: Joi.date().required(),
     apartmentType: Joi.string(),

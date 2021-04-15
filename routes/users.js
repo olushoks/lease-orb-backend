@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const express = require("express");
 const router = express.Router();
 const bcrypt = require("bcrypt");
@@ -21,6 +22,7 @@ router.post("/sign-up", async (req, res) => {
     const salt = await bcrypt.genSalt(10);
 
     user = new User({
+      _id: new mongoose.Types.ObjectId(),
       username: req.body.username,
       password: await bcrypt.hash(req.body.password, salt),
     });
@@ -44,24 +46,29 @@ router.post("/:user/list-lease", auth, async (req, res) => {
 
     const user = await User.findOne({ username: req.params.user });
 
-    const lease = new Lease({
-      postedBy: req.body.postedBy,
-      name: req.body.name,
-      availableDate: req.body.availableDate,
-      apartmentType: req.body.apartmentType,
-      rentPerMonth: req.body.rentPerMonth,
-      city: req.body.city,
-      state: req.body.state,
-      zipCode: req.body.zipCode,
-      additionalInfo: req.body.additionalInfo,
+    await user.save((err) => {
+      if (err) return res.send(`${err}`);
+
+      const lease = new Lease({
+        postedBy: user.username,
+        name: req.body.name,
+        availableDate: req.body.availableDate,
+        apartmentType: req.body.apartmentType,
+        rentPerMonth: req.body.rentPerMonth,
+        city: req.body.city,
+        state: req.body.state,
+        zipCode: req.body.zipCode,
+        additionalInfo: req.body.additionalInfo,
+      });
+
+      lease.save((err) => {
+        if (err) return res.send(`${err}`);
+      });
+      user.listedLease = lease;
+      user.save();
     });
 
-    await lease.save();
-
-    user.listedLease.push(lease);
-    await user.save();
-
-    return res.send(lease);
+    return res.send(user);
   } catch (error) {
     return res.status(500).send(`Internal Server Error:: ${error}`);
   }
