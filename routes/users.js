@@ -152,24 +152,19 @@ router.get("/:user/showInterest/:leaseId", auth, async (req, res) => {
 // REMOVE LEASE FROM LEASES INTERESTED IN
 router.delete("/:user/withdraw-interest/:leaseId", auth, async (req, res) => {
   try {
-    const user = await User.findOne({ username: req.params.user });
-    // const lease = user.leaseInterestedIn.id(req.params.leaseId);
-    const leaseToWithdraw = user.leaseInterestedIn.findOne({
-      _id: req.params.leaseiD,
-    });
-    // const newInterestedIn = user.leaseInterestedIn.filter((el) => {
-    //   // if (el !== req.params.leaseId) return true;
-    //   return true;
-    // });
+    await User.findOne({ username: req.params.user })
+      .populate("leaseInterestedIn")
+      .exec((err, user) => {
+        if (err) return handleError(err);
+        const removedFromInterested = user.leaseInterestedIn.filter((lease) => {
+          if (lease.id !== req.params.leaseId) return true;
+        });
 
-    //user.leaseInterestedIn = [...newInterestedIn];
+        user.leaseInterestedIn = [...removedFromInterested];
 
-    // if (!lease)
-    //   return res.status(400).send(`This lease does not exist in your profile`);
-
-    //await leaseToWithdraw.remove();
-    user.save();
-    return res.send(leaseToWithdraw);
+        user.save();
+        res.send(user.leaseInterestedIn);
+      });
   } catch (error) {
     return res.status(500).send(`Internal Server Error: ${error}`);
   }
