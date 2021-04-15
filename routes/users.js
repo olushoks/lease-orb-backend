@@ -111,6 +111,8 @@ router.put("/:user/edit-lease/:leaseId", auth, async (req, res) => {
   }
 });
 
+// DELETE
+
 // SEARCH AVAILABLE LEASE
 router.get("/:user/search-lease/:criteria", async (req, res) => {
   try {
@@ -134,8 +136,14 @@ router.get("/:user/show-interest/:leaseId", auth, async (req, res) => {
     const lease = await Lease.findOne({ _id: req.params.leaseId });
 
     // ONLY ADD LEASE IF IT IS NOT PRESENT IN THE ARRAY
-    user.leaseInterestedIn.includes(lease) ||
-      user.leaseInterestedIn.push(lease);
+    if (!user.leaseInterestedIn.includes(lease))
+      return res.send(
+        `This lease is already in the leases you showed interest in`
+      );
+
+    user.leaseInterestedIn.push(lease);
+    // user.leaseInterestedIn.includes(lease) ||
+    //   user.leaseInterestedIn.push(lease);
     user.save();
 
     return res.send(user);
