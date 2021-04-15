@@ -20,6 +20,7 @@ const userSchema = new mongoose.Schema({
     required: true,
   },
   listedLease: [{ type: mongoose.Schema.Types.ObjectId, ref: "Lease" }],
+  leaseInterestedIn: [{ type: mongoose.Schema.Types.ObjectId, ref: "Lease" }],
   messages: { type: [messageSchema], default: [] },
 });
 

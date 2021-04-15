@@ -117,4 +117,18 @@ router.get("/:user/search-lease/:criteria", async (req, res) => {
   }
 });
 
+// SHOW INTEREST IN A LEASE
+router.get("/:user/show-interest/:leaseId", auth, async (req, res) => {
+  try {
+    const user = await User.findOne({ username: req.params.user });
+    const lease = await Lease.findOne({ _id: req.params.leaseId });
+    user.leaseInterestedIn = lease;
+    user.save();
+
+    return res.send(user);
+  } catch (error) {
+    return res.status(500).send(`Internal Error: ${error}`);
+  }
+});
+
 module.exports = router;
