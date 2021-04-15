@@ -44,7 +44,9 @@ router.post("/:user/list-lease", auth, async (req, res) => {
     const { error } = validateLease(req.body);
     if (error) return res.status(400).send(error.details[0].message);
 
-    const user = await User.findOne({ username: req.params.user });
+    const user = await User.findOne({ username: req.params.user }).select({
+      password: 0,
+    });
 
     await user.save((err) => {
       if (err) return res.send(`${err}`);
@@ -75,27 +77,33 @@ router.post("/:user/list-lease", auth, async (req, res) => {
 });
 
 // EDIT LISTED LEASE
-router.put("/:user/edit-lease/:id", auth, async (req, res) => {
+router.put("/:user/edit-lease/:leaseId", auth, async (req, res) => {
   try {
     const { error } = validateLease(req.body);
     if (error) return res.status(400).send(error.details[0].message);
 
-    const user = await User.findOne({ username: req.params.user });
+    const user = await User.findOne({ username: req.params.user }).select({
+      password: 0,
+    });
 
-    const lease = user.listedLease.id(req.params.id);
+    const lease = await Lease.findByIdAndUpdate(
+      req.params.leaseId,
+      {
+        postedBy: user.username,
+        name: req.body.name,
+        availableDate: req.body.availableDate,
+        apartmentType: req.body.apartmentType,
+        rentPerMonth: req.body.rentPerMonth,
+        city: req.body.city,
+        state: req.body.state,
+        zipCode: req.body.zipCode,
+        additionalInfo: req.body.additionalInfo,
+      },
+      { new: true }
+    );
 
-    // UPDATE LEASE DETALS
-    lease.postedBy = req.body.postedBy;
-    lease.name = req.body.name;
-    lease.availableDate = req.body.availableDate;
-    lease.apartmentType = req.body.apartmentType;
-    lease.rentPerMonth = req.body.rentPerMonth;
-    lease.city = req.body.city;
-    lease.state = req.body.state;
-    lease.zipCode = req.body.zipCode;
-    lease.additionalInfo = req.body.additionalInfo;
-
-    await user.save();
+    // SAVE UPDATE
+    await lease.save();
 
     return res.send(lease);
   } catch (error) {
@@ -120,9 +128,14 @@ router.get("/:user/search-lease/:criteria", async (req, res) => {
 // SHOW INTEREST IN A LEASE
 router.get("/:user/show-interest/:leaseId", auth, async (req, res) => {
   try {
-    const user = await User.findOne({ username: req.params.user });
+    const user = await User.findOne({ username: req.params.user }).select({
+      password: 0,
+    });
     const lease = await Lease.findOne({ _id: req.params.leaseId });
-    user.leaseInterestedIn = lease;
+
+    // ONLY ADD LEASE IF IT IS NOT PRESENT IN THE ARRAY
+    user.leaseInterestedIn.includes(lease) ||
+      user.leaseInterestedIn.push(lease);
     user.save();
 
     return res.send(user);
