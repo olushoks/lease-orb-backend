@@ -111,6 +111,24 @@ router.put("/:user/edit-lease/:leaseId", auth, async (req, res) => {
   }
 });
 
+// REMOVE LEASE FROM BEEN AVAILABLE
+router.delete("/:user/delist-lease/:leaseId", auth, async (req, res) => {
+  try {
+    const id = req.params.leaseId;
+    // DELETE LEASE DOCUMENT FROM LEASE COLLECTION
+    const leaseToUnlist = await Lease.findByIdAndDelete(id);
+    await leaseToUnlist.save();
+
+    // DELETE LEASE OBJECT REFERENCE FROM USER DOCUMENT
+    const user = await User.findOne({ username: req.params.user });
+    user.listedLease.pull(id);
+    user.save();
+    return res.send(user);
+  } catch (error) {
+    return res.status(500).send(`Internal Server Error: ${error}`);
+  }
+});
+
 // SEARCH AVAILABLE LEASE
 router.get("/:user/search-lease/:criteria", async (req, res) => {
   try {
@@ -126,7 +144,7 @@ router.get("/:user/search-lease/:criteria", async (req, res) => {
 });
 
 // SHOW INTEREST IN A LEASE
-router.get("/:user/showInterest/:leaseId", auth, async (req, res) => {
+router.get("/:user/show-interest/:leaseId", auth, async (req, res) => {
   try {
     const user = await User.findOne({ username: req.params.user }).select({
       password: 0,
