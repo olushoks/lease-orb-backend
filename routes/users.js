@@ -115,15 +115,49 @@ router.put("/:user/edit-lease/:leaseId", auth, async (req, res) => {
 router.delete("/:user/delist-lease/:leaseId", auth, async (req, res) => {
   try {
     const id = req.params.leaseId;
+
     // DELETE LEASE DOCUMENT FROM LEASE COLLECTION
     const leaseToUnlist = await Lease.findByIdAndDelete(id);
-    await leaseToUnlist.save();
+    //await leaseToUnlist.save();
 
     // DELETE LEASE OBJECT REFERENCE FROM USER DOCUMENT
     const user = await User.findOne({ username: req.params.user });
     user.listedLease.pull(id);
-    user.save();
-    return res.send(user);
+
+    // DELETE LEASE FROM PROFILE OF USERS WHO SHOWED INTEREST
+
+    const allUsers = await User.find();
+
+    // allUsers.map((user) => {
+    //   user.populate("leaseInterestedIn").exec((err, user) => {
+    //     if (err) return handleError(err);
+    //     const updatedLeasesInterestedIn = user.leaseInterestedIn.filter(
+    //       (lease) => {
+    //         if (lease.id !== id) return true;
+    //       }
+    //     );
+
+    //     user.leaseInterestedIn = [...updatedLeasesInterestedIn];
+    //     user.save();
+    //     res.send(user.leaseInterestedIn);
+    //   });
+    // });
+
+    allUsers[0].populate("leaseInterestedIn").exec((err, user) => {
+      if (err) return handleError(err);
+      const updatedLeasesInterestedIn = user.leaseInterestedIn.filter(
+        (lease) => {
+          if (lease.id !== id) return true;
+        }
+      );
+
+      user.leaseInterestedIn = [...updatedLeasesInterestedIn];
+      user.save();
+      res.send(user.leaseInterestedIn);
+    });
+
+    // user.save();
+    //return res.send(leaseToUnlist);
   } catch (error) {
     return res.status(500).send(`Internal Server Error: ${error}`);
   }
@@ -152,16 +186,16 @@ router.get("/:user/show-interest/:leaseId", auth, async (req, res) => {
     const lease = await Lease.findOne({ _id: req.params.leaseId });
 
     // ONLY ADD LEASE IF IT IS NOT PRESENT IN THE ARRAY
-    if (!user.leaseInterestedIn.includes(lease))
+    if (user.leaseInterestedIn.includes(lease.id))
       return res.send(
         `This lease is already in the leases you showed interest in`
       );
 
-    //user.leaseInterestedIn.push(lease);
-    user.leaseInterestedIn = [...user.leaseInterestedIn, lease];
+    user.leaseInterestedIn = [...user.leaseInterestedIn, lease.id];
     user.save();
 
-    return res.send(user);
+    return res.send(user.leaseInterestedIn);
+    //return res.send(lease.id);
   } catch (error) {
     return res.status(500).send(`Internal Error: ${error}`);
   }
@@ -174,14 +208,17 @@ router.delete("/:user/withdraw-interest/:leaseId", auth, async (req, res) => {
       .populate("leaseInterestedIn")
       .exec((err, user) => {
         if (err) return handleError(err);
-        const removedFromInterested = user.leaseInterestedIn.filter((lease) => {
-          if (lease.id !== req.params.leaseId) return true;
-        });
+        const updatedLeasesInterestedIn = user.leaseInterestedIn.filter(
+          (lease) => {
+            if (lease.id !== req.params.leaseId) return true;
+          }
+        );
 
-        user.leaseInterestedIn = [...removedFromInterested];
+        user.leaseInterestedIn = [...updatedLeasesInterestedIn];
 
         user.save();
-        res.send(user.leaseInterestedIn);
+        res.send(updatedLeasesInterestedIn);
+        // res.send(user.leaseInterestedIn);
       });
   } catch (error) {
     return res.status(500).send(`Internal Server Error: ${error}`);
