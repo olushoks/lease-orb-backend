@@ -48,6 +48,7 @@ router.post("/:user/list-lease", auth, async (req, res) => {
       password: 0,
     });
 
+    // ONLY ADD LEASE IF NONE DOES NOT CURRENTLY EXIST
     if (user.listedLease.length >= 1) return res.send(`You cannot have more than one active leases`);
 
     await user.save((err) => {
@@ -152,6 +153,8 @@ router.get("/:user/search-lease/:criteria", async (req, res) => {
       { zipCode: req.params.criteria },
       { city: req.params.criteria },
     ]);
+
+    if (leases.length === 0) return res.send(`There is no lease that matches your criteria. Please modify your search`)
 
     return res.send(leases);
   } catch (error) {
