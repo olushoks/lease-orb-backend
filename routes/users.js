@@ -48,6 +48,8 @@ router.post("/:user/list-lease", auth, async (req, res) => {
       password: 0,
     });
 
+    if (user.listedLease.length >= 1) return res.send(`You cannot have more than one active leases`);
+
     await user.save((err) => {
       if (err) return res.send(`${err}`);
 
