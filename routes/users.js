@@ -116,49 +116,29 @@ router.delete("/:user/delist-lease/:leaseId", auth, async (req, res) => {
   try {
     const id = req.params.leaseId;
 
-    // DELETE LEASE DOCUMENT FROM LEASE COLLECTION
-    const leaseToUnlist = await Lease.findByIdAndDelete(id);
-    //await leaseToUnlist.save();
-
     // DELETE LEASE OBJECT REFERENCE FROM USER DOCUMENT
     const user = await User.findOne({ username: req.params.user });
     user.listedLease.pull(id);
-
+    user.save();
+    
     // DELETE LEASE FROM PROFILE OF USERS WHO SHOWED INTEREST
-
-    const allUsers = await User.find();
-
-    // allUsers.map((user) => {
-    //   user.populate("leaseInterestedIn").exec((err, user) => {
-    //     if (err) return handleError(err);
-    //     const updatedLeasesInterestedIn = user.leaseInterestedIn.filter(
-    //       (lease) => {
-    //         if (lease.id !== id) return true;
-    //       }
-    //     );
-
-    //     user.leaseInterestedIn = [...updatedLeasesInterestedIn];
-    //     user.save();
-    //     res.send(user.leaseInterestedIn);
-    //   });
-    // });
-
-    allUsers[0].populate("leaseInterestedIn").exec((err, user) => {
-      if (err) return handleError(err);
-      const updatedLeasesInterestedIn = user.leaseInterestedIn.filter(
-        (lease) => {
-          if (lease.id !== id) return true;
-        }
-      );
-
-      user.leaseInterestedIn = [...updatedLeasesInterestedIn];
+    const users = await User.find()
+    .populate("leaseInterestedIn")
+    
+    users.map((user) => {
+      const updatedInterest = user.leaseInterestedIn.filter((lease) => {
+        if (lease.id !== id) return true;
+      });
+      user.leaseInterestedIn = [...updatedInterest];
       user.save();
-      res.send(user.leaseInterestedIn);
-    });
+    })
 
-    // user.save();
-    //return res.send(leaseToUnlist);
-  } catch (error) {
+    // DELETE LEASE DOCUMENT FROM LEASE COLLECTION
+    // const leaseToUnlist = await Lease.findByIdAndDelete(id);
+    // await leaseToUnlist.save();
+          
+    return res.send(users);
+    } catch (error) {
     return res.status(500).send(`Internal Server Error: ${error}`);
   }
 });
