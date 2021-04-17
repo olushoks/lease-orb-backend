@@ -49,7 +49,8 @@ router.post("/:user/list-lease", auth, async (req, res) => {
     });
 
     // ONLY ADD LEASE IF NONE DOES NOT CURRENTLY EXIST
-    if (user.listedLease.length >= 1) return res.send(`You cannot have more than one active leases`);
+    if (user.listedLease.length >= 1)
+      return res.send(`You cannot have more than one active leases`);
 
     await user.save((err) => {
       if (err) return res.send(`${err}`);
@@ -119,29 +120,26 @@ router.delete("/:user/delist-lease/:leaseId", auth, async (req, res) => {
   try {
     const id = req.params.leaseId;
 
-    // DELETE LEASE OBJECT REFERENCE FROM USER DOCUMENT
-    const user = await User.findOne({ username: req.params.user });
-    user.listedLease.pull(id);
-    user.save();
-    
     // DELETE LEASE FROM PROFILE OF USERS WHO SHOWED INTEREST
-    const users = await User.find()
-    .populate("leaseInterestedIn")
-    
+    const users = await User.find().populate("leaseInterestedIn");
+
     users.map((user) => {
       const updatedInterest = user.leaseInterestedIn.filter((lease) => {
         if (lease.id !== id) return true;
       });
       user.leaseInterestedIn = [...updatedInterest];
       user.save();
-    })
+    });
 
     // DELETE LEASE DOCUMENT FROM LEASE COLLECTION
-    // const leaseToUnlist = await Lease.findByIdAndDelete(id);
-    // await leaseToUnlist.save();
-          
+    await Lease.findByIdAndDelete(id);
+
+    // DELETE LEASE OBJECT REFERENCE FROM USER DOCUMENT
+    const user = await User.findOne({ username: req.params.user });
+    user.listedLease.pull(id);
+    user.save();
     return res.send(users);
-    } catch (error) {
+  } catch (error) {
     return res.status(500).send(`Internal Server Error: ${error}`);
   }
 });
@@ -154,7 +152,10 @@ router.get("/:user/search-lease/:criteria", async (req, res) => {
       { city: req.params.criteria },
     ]);
 
-    if (leases.length === 0) return res.send(`There is no lease that matches your criteria. Please modify your search`)
+    if (leases.length === 0)
+      return res.send(
+        `There is no lease that matches your criteria. Please modify your search`
+      );
 
     return res.send(leases);
   } catch (error) {
@@ -171,7 +172,10 @@ router.get("/:user/show-interest/:leaseId", auth, async (req, res) => {
     const lease = await Lease.findOne({ _id: req.params.leaseId });
 
     // PREVENT USER FROM INDICATING INTEREST IN A LEASE THEY POSTED
-    if (user.listedLease.includes(lease.id)) return res.send(`You are not allowed to indicate interest in your own lease!`);
+    if (user.listedLease.includes(lease.id))
+      return res.send(
+        `You are not allowed to indicate interest in your own lease!`
+      );
 
     // ONLY ADD LEASE IF IT IS NOT PRESENT IN THE ARRAY
     if (user.leaseInterestedIn.includes(lease.id))
@@ -183,7 +187,6 @@ router.get("/:user/show-interest/:leaseId", auth, async (req, res) => {
     user.save();
 
     return res.send(user.leaseInterestedIn);
-    //return res.send(lease.id);
   } catch (error) {
     return res.status(500).send(`Internal Error: ${error}`);
   }
@@ -206,7 +209,7 @@ router.delete("/:user/withdraw-interest/:leaseId", auth, async (req, res) => {
 
         user.save();
         res.send(updatedLeasesInterestedIn);
-        // res.send(user.leaseInterestedIn);
+        res.send(user.leaseInterestedIn);
       });
   } catch (error) {
     return res.status(500).send(`Internal Server Error: ${error}`);
