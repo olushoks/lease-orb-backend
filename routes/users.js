@@ -119,28 +119,29 @@ router.delete("/:user/delist-lease/:leaseId", auth, async (req, res) => {
   try {
     const id = req.params.leaseId;
 
-    // DELETE LEASE OBJECT REFERENCE FROM USER DOCUMENT
-    const user = await User.findOne({ username: req.params.user });
-    user.listedLease.pull(id);
-    user.save();
-    
     // DELETE LEASE FROM PROFILE OF USERS WHO SHOWED INTEREST
-    const users = await User.find()
-    .populate("leaseInterestedIn")
+    // const users = await User.find()
+    // .populate("leaseInterestedIn")
     
-    users.map((user) => {
-      const updatedInterest = user.leaseInterestedIn.filter((lease) => {
-        if (lease.id !== id) return true;
-      });
-      user.leaseInterestedIn = [...updatedInterest];
-      user.save();
-    })
+    // users.map((user) => {
+    //   const updatedInterest = user.leaseInterestedIn.filter((lease) => {
+    //     if (lease.id !== id) return true;
+    //   });
+    //   user.leaseInterestedIn = [...updatedInterest];
+    //   user.save();
+    // })
 
     // DELETE LEASE DOCUMENT FROM LEASE COLLECTION
-    // const leaseToUnlist = await Lease.findByIdAndDelete(id);
-    // await leaseToUnlist.save();
+    const leaseToUnlist = await Lease.findByIdAndDelete(id);
+ 
+
+    // // DELETE LEASE OBJECT REFERENCE FROM USER DOCUMENT
+    // const user = await User.findOne({ username: req.params.user });
+    // user.listedLease.pull(id);
+    // user.save();
+    
           
-    return res.send(users);
+    return res.send(leaseToUnlist);
     } catch (error) {
     return res.status(500).send(`Internal Server Error: ${error}`);
   }
@@ -171,7 +172,7 @@ router.get("/:user/show-interest/:leaseId", auth, async (req, res) => {
     const lease = await Lease.findOne({ _id: req.params.leaseId });
 
     // PREVENT USER FROM INDICATING INTEREST IN A LEASE THEY POSTED
-    if (user.listedLease.includes(lease.id)) return res.send(`You are not allowed to indicate interest in your own lease!`);
+    if (user.listedLease.includes(req.params.leaseId)) return res.send(`You are not allowed to indicate interest in your own lease!`);
 
     // ONLY ADD LEASE IF IT IS NOT PRESENT IN THE ARRAY
     if (user.leaseInterestedIn.includes(lease.id))
