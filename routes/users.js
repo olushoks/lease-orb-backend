@@ -165,6 +165,9 @@ router.get("/:user/show-interest/:leaseId", auth, async (req, res) => {
     });
     const lease = await Lease.findOne({ _id: req.params.leaseId });
 
+    // PREVENT USER FROM INDICATING INTEREST IN A LEASE THEY POSTED
+    if (user.listedLease.includes(lease.id)) return res.send(`You are not allowed to indicate interest in your own lease!`);
+
     // ONLY ADD LEASE IF IT IS NOT PRESENT IN THE ARRAY
     if (user.leaseInterestedIn.includes(lease.id))
       return res.send(
