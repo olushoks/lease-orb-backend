@@ -11,7 +11,11 @@ router.post("/sign-in", async (req, res) => {
     if (error) return res.status(400).send(error.details[0].message);
 
     // CHECK IF USER EXISTS IN DATABASE
-    let user = await User.findOne({ username: req.body.username });
+    let user = await User.findOne({ username: req.body.username })
+      .populate("leaseInterestedIn")
+      .populate("listedLease")
+      .exec();
+
     if (!user) return res.status(400).send(`Invalid username or password`);
 
     // CHECK PASSWORD ACCURACY
@@ -28,11 +32,13 @@ router.post("/sign-in", async (req, res) => {
     return res
       .header("x-auth-token", token)
       .header("access-control-expose-headers", "x-auth-token")
-      .send({ _id: user._id, 
-        username: user.username, 
-        listedLease: user.listedLease, 
-        leaseInterestedIn: user.leaseInterestedIn, 
-        messages: user.messages });
+      .send({
+        _id: user._id,
+        username: user.username,
+        listedLease: user.listedLease,
+        leaseInterestedIn: user.leaseInterestedIn,
+        messages: user.messages,
+      });
   } catch (error) {
     return res.status(500).send(`Internal Server Error: ${error}`);
   }

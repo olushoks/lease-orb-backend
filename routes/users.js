@@ -16,8 +16,7 @@ router.post("/sign-up", async (req, res) => {
 
     // CHECK IF USER ALREADY EXISTS
     let user = await User.findOne({ username: req.body.username });
-    if (user) return res.status(400).send(`User already exists`);
-   
+    if (user) return res.status(400).send(400);
 
     // SALT FOR PASSWORD HASH
     const salt = await bcrypt.genSalt(10);
@@ -33,11 +32,13 @@ router.post("/sign-up", async (req, res) => {
     return res
       .header("x-auth-token", token)
       .header("access-control-expose-headers", "x-auth-token")
-      .send({ _id: user._id, 
-        username: user.username, 
-        listedLease: user.listedLease, 
-        leaseInterestedIn: user.leaseInterestedIn, 
-        messages: user.messages });
+      .send({
+        _id: user._id,
+        username: user.username,
+        listedLease: user.listedLease,
+        leaseInterestedIn: user.leaseInterestedIn,
+        messages: user.messages,
+      });
   } catch (error) {
     return res.status(500).send(`Internal Server Error: ${error}`);
   }
