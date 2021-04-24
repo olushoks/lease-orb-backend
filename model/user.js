@@ -1,5 +1,4 @@
 const mongoose = require("mongoose");
-const { Lease } = require("./lease");
 const { messageSchema } = require("./message");
 const Joi = require("joi");
 const jwt = require("jsonwebtoken");
@@ -21,7 +20,7 @@ const userSchema = new mongoose.Schema({
   },
   listedLease: [{ type: mongoose.Schema.Types.ObjectId, ref: "Lease" }],
   leaseInterestedIn: [{ type: mongoose.Schema.Types.ObjectId, ref: "Lease" }],
-  messages: { type: [messageSchema], default: [] },
+  messages: { type: [messageSchema] },
 });
 
 // METHOD TO GENERATE JWT TOKEN
@@ -30,7 +29,6 @@ userSchema.methods.generateAuthToken = () => {
     { _id: this._id, username: this.username },
     config.get("jwtSecret"),
     { expiresIn: config.get("expiresIn") }
-    //{ expiresIn: "6h" }
   );
 };
 

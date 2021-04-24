@@ -2,10 +2,13 @@ const mongoose = require("mongoose");
 const express = require("express");
 const router = express.Router();
 const bcrypt = require("bcrypt");
+const fs = require("fs");
+const path = require("path");
 const auth = require("../middleware/auth");
 
 const { User, validateUser } = require("../model/user");
 const { Lease, validateLease } = require("../model/lease");
+const { Message, validateMessage} = require("../model/message");
 
 // USER SIGN-UP (CREATE NEW ACCOUNT)
 router.post("/sign-up", async (req, res) => {
@@ -71,6 +74,9 @@ router.post("/:user/list-lease", auth, async (req, res) => {
         state: req.body.state,
         zipCode: req.body.zipCode,
         additionalInfo: req.body.additionalInfo,
+        images: {
+          data: fs.readFileSync(path.join(__dirname + "/uploads/" + req.file.filename)),
+        }
       });
 
       lease.save((err) => {
@@ -222,4 +228,37 @@ router.delete("/:user/withdraw-interest/:leaseId", auth, async (req, res) => {
   }
 });
 
+// CONTACT SELLER REGARDING POSTED LEASE
+router.post("/:user/contact-leaseholder/:leaseholder", auth, async (req, res) => {
+  try {
+  // CHECK IF REQ BODY MEETS REQUIREMENT
+  const { error } = validateMessage(req.body);
+  if (error) return res.status(400).send(error.details[0].message);
+
+  const [user] = await User.find({username: req.params.user});
+  const [leaseHolder] = await User.find({username: req.params.leaseholder});
+
+  const message = new Message({
+    title: req.body.title,
+    conversation: []
+  });
+
+  user.messages.push(message);
+  user.messages[0].conversation.push({type: "sent", text: req.body.text});
+
+  leaseHolder.messages.push(message);
+  leaseHolder.messages[0].conversation.push({type: "received", text: req.body.text});
+  
+  await user.save();
+  await leaseHolder.save();
+  
+  return res.send(user);
+  } catch (error) {
+    res.status(500).send(`Internal Server Error`);
+  }
+ 
+})
+
 module.exports = router;
+
+
