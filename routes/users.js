@@ -76,11 +76,11 @@ router.post("/:user/list-lease", auth, async (req, res) => {
         additionalInfo: req.body.additionalInfo,
         lat: req.body.lat,
         lng: req.body.lng,
-        images: {
-          data: fs.readFileSync(
-            path.join(__dirname + "/uploads/" + req.file.filename)
-          ),
-        },
+        // images: {
+        //   data: fs.readFileSync(
+        //     path.join(__dirname + "/uploads/" + req.file.filename)
+        //   ),
+        // },
       });
 
       lease.save((err) => {
@@ -88,9 +88,8 @@ router.post("/:user/list-lease", auth, async (req, res) => {
       });
       user.listedLease = lease;
       user.save();
+      return res.send(lease);
     });
-
-    return res.send(user);
   } catch (error) {
     return res.status(500).send(`Internal Server Error:: ${error}`);
   }
