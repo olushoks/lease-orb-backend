@@ -19,7 +19,10 @@ router.post("/sign-up", async (req, res) => {
 
     // CHECK IF USER ALREADY EXISTS
     let user = await User.findOne({ username: req.body.username });
-    if (user) return res.status(400).send(400);
+    if (user)
+      return res
+        .status(401)
+        .send({ status: 401, error: "user alreadt exists" });
 
     // SALT FOR PASSWORD HASH
     const salt = await bcrypt.genSalt(10);
@@ -48,7 +51,7 @@ router.post("/sign-up", async (req, res) => {
 });
 
 // LIST LEASE
-router.post("/:user/list-lease", auth, async (req, res) => {
+router.post("/:user/list-lease", async (req, res) => {
   try {
     const { error } = validateLease(req.body);
     if (error) return res.status(400).send(error.details[0].message);
@@ -88,8 +91,9 @@ router.post("/:user/list-lease", auth, async (req, res) => {
       });
       user.listedLease = lease;
       user.save();
-      return res.send(lease);
+      // return res.send(lease);
     });
+    return res.send(user);
   } catch (error) {
     return res.status(500).send(`Internal Server Error:: ${error}`);
   }
@@ -131,7 +135,7 @@ router.put("/:user/edit-lease/:leaseId", auth, async (req, res) => {
 });
 
 // REMOVE LEASE FROM BEEN AVAILABLE
-router.delete("/:user/delist-lease/:leaseId", auth, async (req, res) => {
+router.delete("/:user/delist-lease/:leaseId", async (req, res) => {
   try {
     const id = req.params.leaseId;
 
@@ -150,10 +154,12 @@ router.delete("/:user/delist-lease/:leaseId", auth, async (req, res) => {
     await Lease.findByIdAndDelete(id);
 
     // DELETE LEASE OBJECT REFERENCE FROM USER DOCUMENT
-    const user = await User.findOne({ username: req.params.user });
+    const user = await User.findOne({ username: req.params.user }).select({
+      password: 0,
+    });
     user.listedLease.pull(id);
     user.save();
-    return res.send(users);
+    return res.send(user);
   } catch (error) {
     return res.status(500).send(`Internal Server Error: ${error}`);
   }
@@ -167,10 +173,7 @@ router.get("/:user/search-lease/:criteria", async (req, res) => {
       { city: req.params.criteria },
     ]);
 
-    if (leases.length === 0)
-      return res.send(
-        `There is no lease that matches your criteria. Please modify your search`
-      );
+    //if (leases.length === 0) return res.send();
 
     return res.send(leases);
   } catch (error) {
