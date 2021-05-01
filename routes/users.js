@@ -89,7 +89,7 @@ router.post("/:user/list-lease", async (req, res) => {
       lease.save((err) => {
         if (err) return res.send(`${err}`);
       });
-      user.listedLease = lease;
+      user.listedLease.push(lease);
       user.save();
       // return res.send(lease);
       return res.send(user);
