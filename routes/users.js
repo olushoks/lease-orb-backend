@@ -22,7 +22,7 @@ router.post("/sign-up", async (req, res) => {
     if (user)
       return res
         .status(401)
-        .send({ status: 401, error: "user alreadt exists" });
+        .send({ status: 401, error: "user already exists" });
 
     // SALT FOR PASSWORD HASH
     const salt = await bcrypt.genSalt(10);
@@ -173,8 +173,6 @@ router.get("/:user/search-lease/:criteria", async (req, res) => {
       { city: req.params.criteria },
     ]);
 
-    //if (leases.length === 0) return res.send();
-
     return res.send(leases);
   } catch (error) {
     return res.status(500).send(`Internal Server Error:: ${error}`);
@@ -182,7 +180,7 @@ router.get("/:user/search-lease/:criteria", async (req, res) => {
 });
 
 // SHOW INTEREST IN A LEASE
-router.get("/:user/show-interest/:leaseId", auth, async (req, res) => {
+router.post("/:user/show-interest/:leaseId", async (req, res) => {
   try {
     const user = await User.findOne({ username: req.params.user }).select({
       password: 0,
@@ -191,15 +189,15 @@ router.get("/:user/show-interest/:leaseId", auth, async (req, res) => {
 
     // PREVENT USER FROM INDICATING INTEREST IN A LEASE THEY POSTED
     if (user.listedLease.includes(lease.id))
-      return res.send(
-        `You are not allowed to indicate interest in your own lease!`
-      );
+      return res
+        .status(400)
+        .send(`You are not allowed to indicate interest in your own lease!`);
 
     // ONLY ADD LEASE IF IT IS NOT PRESENT IN THE ARRAY
     if (user.leaseInterestedIn.includes(lease.id))
-      return res.send(
-        `This lease is already in the leases you showed interest in`
-      );
+      return res
+        .status(400)
+        .send(`This lease is already in the leases you showed interest in`);
 
     user.leaseInterestedIn = [...user.leaseInterestedIn, lease.id];
     user.save();
