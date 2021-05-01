@@ -92,8 +92,8 @@ router.post("/:user/list-lease", async (req, res) => {
       user.listedLease = lease;
       user.save();
       // return res.send(lease);
+      return res.send(user);
     });
-    return res.send(user);
   } catch (error) {
     return res.status(500).send(`Internal Server Error:: ${error}`);
   }
