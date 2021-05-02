@@ -189,20 +189,20 @@ router.post("/:user/show-interest/:leaseId", async (req, res) => {
 
     // PREVENT USER FROM INDICATING INTEREST IN A LEASE THEY POSTED
     if (user.listedLease.includes(lease.id))
-      return res
-        .status(400)
-        .send(`You are not allowed to indicate interest in your own lease!`);
+      return res.status(400).send({
+        error1: `You are not allowed to indicate interest in your own lease!`,
+      });
 
     // ONLY ADD LEASE IF IT IS NOT PRESENT IN THE ARRAY
     if (user.leaseInterestedIn.includes(lease.id))
-      return res
-        .status(400)
-        .send(`This lease is already in the leases you showed interest in`);
+      return res.status(400).send({
+        error2: `This lease is already in the leases you showed interest in`,
+      });
 
     user.leaseInterestedIn = [...user.leaseInterestedIn, lease.id];
     user.save();
 
-    return res.send(user.leaseInterestedIn);
+    return res.send(user);
   } catch (error) {
     return res.status(500).send(`Internal Error: ${error}`);
   }
@@ -224,8 +224,8 @@ router.delete("/:user/withdraw-interest/:leaseId", auth, async (req, res) => {
         user.leaseInterestedIn = [...updatedLeasesInterestedIn];
 
         user.save();
-        res.send(updatedLeasesInterestedIn);
-        res.send(user.leaseInterestedIn);
+
+        return res.send(user);
       });
   } catch (error) {
     return res.status(500).send(`Internal Server Error: ${error}`);
