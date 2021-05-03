@@ -204,8 +204,35 @@ router.post("/:user/show-interest/:leaseId", async (req, res) => {
 
     await user.execPopulate("leaseInterestedIn");
     await user.execPopulate("listedLease");
+    /*** */
+
+    // AUTO GENERATED MESSAGE UPON USER SUCCESFULLY INDICATING INITEREST
+    const leaseHolder = await User.findOne({
+      username: lease.postedBy,
+    });
+
+    const message = new Message({
+      title: `Btw ${user.username} & ${lease.postedBy} for ${lease.name}`,
+      conversation: [],
+    });
+
+    const text = `Hi, my name is ${user.username}, and I am interested in the lease you recently put up`;
+
+    user.messages.unshift(message);
+    user.messages[0].conversation.push({
+      type: "sent",
+      text,
+    });
+
+    leaseHolder.messages.unshift(message);
+    leaseHolder.messages[0].conversation.push({
+      type: "received",
+      text,
+    });
+    /*** */
 
     await user.save();
+    await leaseHolder.save();
 
     return res.send(user);
   } catch (error) {
