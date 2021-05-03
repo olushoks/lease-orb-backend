@@ -182,9 +182,10 @@ router.get("/:user/search-lease/:criteria", async (req, res) => {
 // SHOW INTEREST IN A LEASE
 router.post("/:user/show-interest/:leaseId", async (req, res) => {
   try {
-    const user = await User.findOne({ username: req.params.user }).select({
+    let user = await User.findOne({ username: req.params.user }).select({
       password: 0,
     });
+
     const lease = await Lease.findOne({ _id: req.params.leaseId });
 
     // PREVENT USER FROM INDICATING INTEREST IN A LEASE THEY POSTED
@@ -199,8 +200,12 @@ router.post("/:user/show-interest/:leaseId", async (req, res) => {
         error2: `This lease is already in the leases you showed interest in`,
       });
 
-    user.leaseInterestedIn = [...user.leaseInterestedIn, lease.id];
-    user.save();
+    user.leaseInterestedIn = [...user.leaseInterestedIn, lease];
+
+    await user.execPopulate("leaseInterestedIn");
+    await user.execPopulate("listedLease");
+
+    await user.save();
 
     return res.send(user);
   } catch (error) {
@@ -213,6 +218,9 @@ router.delete("/:user/withdraw-interest/:leaseId", auth, async (req, res) => {
   try {
     await User.findOne({ username: req.params.user })
       .populate("leaseInterestedIn")
+      .select({
+        password: 0,
+      })
       .exec((err, user) => {
         if (err) return handleError(err);
         const updatedLeasesInterestedIn = user.leaseInterestedIn.filter(
@@ -232,7 +240,7 @@ router.delete("/:user/withdraw-interest/:leaseId", auth, async (req, res) => {
   }
 });
 
-// CONTACT SELLER REGARDING POSTED LEASE
+// CONTACT LEASEHOLDER REGARDING POSTED LEASE
 router.post(
   "/:user/contact-leaseholder/:leaseholder",
   auth,
