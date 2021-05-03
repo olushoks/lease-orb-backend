@@ -19,10 +19,7 @@ router.post("/sign-up", async (req, res) => {
 
     // CHECK IF USER ALREADY EXISTS
     let user = await User.findOne({ username: req.body.username });
-    if (user)
-      return res
-        .status(401)
-        .send({ status: 401, error: "user already exists" });
+    if (user) return res.status(401).send("user already exists");
 
     // SALT FOR PASSWORD HASH
     const salt = await bcrypt.genSalt(10);
@@ -204,7 +201,6 @@ router.post("/:user/show-interest/:leaseId", async (req, res) => {
 
     await user.execPopulate("leaseInterestedIn");
     await user.execPopulate("listedLease");
-    /*** */
 
     // AUTO GENERATED MESSAGE UPON USER SUCCESFULLY INDICATING INITEREST
     const leaseHolder = await User.findOne({
@@ -229,7 +225,6 @@ router.post("/:user/show-interest/:leaseId", async (req, res) => {
       type: "received",
       text,
     });
-    /*** */
 
     await user.save();
     await leaseHolder.save();
@@ -241,27 +236,23 @@ router.post("/:user/show-interest/:leaseId", async (req, res) => {
 });
 
 // REMOVE LEASE FROM LEASES INTERESTED IN
-router.delete("/:user/withdraw-interest/:leaseId", auth, async (req, res) => {
+router.delete("/:user/withdraw-interest/:leaseId", async (req, res) => {
   try {
-    await User.findOne({ username: req.params.user })
-      .populate("leaseInterestedIn")
-      .select({
-        password: 0,
-      })
-      .exec((err, user) => {
-        if (err) return handleError(err);
-        const updatedLeasesInterestedIn = user.leaseInterestedIn.filter(
-          (lease) => {
-            if (lease.id !== req.params.leaseId) return true;
-          }
-        );
+    const user = await User.findOne({ username: req.params.user }).select({
+      password: 0,
+    });
 
-        user.leaseInterestedIn = [...updatedLeasesInterestedIn];
+    const updatedLeasesInterestedIn = user.leaseInterestedIn.filter((lease) => {
+      if (!user.leaseInterestedIn.includes(req.params.leaseId)) return true;
+    });
 
-        user.save();
+    user.leaseInterestedIn = [...updatedLeasesInterestedIn];
 
-        return res.send(user);
-      });
+    await user.execPopulate("leaseInterestedIn");
+    await user.execPopulate("listedLease");
+    await user.save();
+
+    return res.send(user);
   } catch (error) {
     return res.status(500).send(`Internal Server Error: ${error}`);
   }
