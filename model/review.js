@@ -9,3 +9,14 @@ const reviewSchema = mongoose.Schema({
 
 const Review = mongoose.model("Review", reviewSchema);
 
+// VALIDATION FUNCTION
+const validateReview = (review) => {
+    const schema = Joi.object({
+        review_comment: Joi.string().min(5).max(500).required(),
+    });
+    return schema.validate(review);
+}
+
+exports.reviewSchema = reviewSchema;
+exports.review = Review;
+exports.validateReview = validateReview;
