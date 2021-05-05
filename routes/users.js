@@ -208,7 +208,7 @@ router.post("/:user/show-interest/:leaseId", async (req, res) => {
     });
 
     const message = new Message({
-      title: `Btw ${user.username} & ${lease.postedBy} for ${lease.name}`,
+      title: `From ${user.username} for ${lease.name}`,
       conversation: [],
     });
 
@@ -226,6 +226,7 @@ router.post("/:user/show-interest/:leaseId", async (req, res) => {
       text,
     });
 
+    await message.save();
     await user.save();
     await leaseHolder.save();
 
