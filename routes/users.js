@@ -9,6 +9,7 @@ const auth = require("../middleware/auth");
 const { User, validateUser } = require("../model/user");
 const { Lease, validateLease } = require("../model/lease");
 const { Message, validateMessage } = require("../model/message");
+const { sensitiveHeaders } = require("http2");
 
 // USER SIGN-UP (CREATE NEW ACCOUNT)
 router.post("/sign-up", async (req, res) => {
@@ -259,39 +260,29 @@ router.delete("/:user/withdraw-interest/:leaseId", async (req, res) => {
   }
 });
 
-// CONTACT LEASEHOLDER REGARDING POSTED LEASE
+// REPLY TO MESSAGE(S)
 router.post(
-  "/:user/contact-leaseholder/:leaseholder",
-  auth,
+  "/:sender/reply-message/:message_id/:receiver",
   async (req, res) => {
     try {
-      // CHECK IF REQ BODY MEETS REQUIREMENT
-      const { error } = validateMessage(req.body);
-      if (error) return res.status(400).send(error.details[0].message);
-
-      const [user] = await User.find({ username: req.params.user });
-      const [leaseHolder] = await User.find({
-        username: req.params.leaseholder,
+      const [sender] = await User.find({ username: req.params.sender });
+      const [receiver] = await User.find({
+        username: req.params.receiver,
       });
 
-      const message = new Message({
-        title: req.body.title,
-        conversation: [],
-      });
+      const text = req.body.text;
 
-      user.messages.push(message);
-      user.messages[0].conversation.push({ type: "sent", text: req.body.text });
+      const senderMessage = sender.messages.id(req.params.message_id);
 
-      leaseHolder.messages.push(message);
-      leaseHolder.messages[0].conversation.push({
-        type: "received",
-        text: req.body.text,
-      });
+      const receiverMessage = receiver.messages.id(req.params.message_id);
 
-      await user.save();
-      await leaseHolder.save();
+      senderMessage.conversation.push({ type: "sent", text });
+      receiverMessage.conversation.push({ type: "received", text });
 
-      return res.send(user);
+      await sender.save();
+      await receiver.save();
+
+      return res.send(sender);
     } catch (error) {
       res.status(500).send(`Internal Server Error`);
     }
