@@ -245,7 +245,7 @@ router.delete("/:user/withdraw-interest/:leaseId", async (req, res) => {
     });
 
     const updatedLeasesInterestedIn = user.leaseInterestedIn.filter((lease) => {
-      if (!user.leaseInterestedIn.includes(req.params.leaseId)) return true;
+      if (lease != req.params.leaseId) return true;
     });
 
     user.leaseInterestedIn = [...updatedLeasesInterestedIn];
@@ -254,7 +254,7 @@ router.delete("/:user/withdraw-interest/:leaseId", async (req, res) => {
     await user.execPopulate("listedLease");
     await user.save();
 
-    return res.send(user);
+    return res.send(user.leaseInterestedIn);
   } catch (error) {
     return res.status(500).send(`Internal Server Error: ${error}`);
   }
@@ -265,10 +265,13 @@ router.post(
   "/:sender/reply-message/:message_id/:receiver",
   async (req, res) => {
     try {
-      const [sender] = await User.find({ username: req.params.sender });
+      const [sender] = await User.find({ username: req.params.sender })
+      .select({password: 0});
+
       const [receiver] = await User.find({
         username: req.params.receiver,
-      });
+      })
+      .select({password: 0});
 
       const text = req.body.text;
 
