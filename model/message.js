@@ -2,8 +2,9 @@ const mongoose = require("mongoose");
 const Joi = require("joi");
 
 const messageSchema = mongoose.Schema({
-  title: { type: String, required: true },
-  conversation: { type: [], required: true },
+  title: { type: String },
+  conversation: { type: [], default: [], required: true },
+  recipient: { type: String },
 });
 
 const Message = mongoose.model("Message", messageSchema);

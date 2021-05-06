@@ -220,12 +220,14 @@ router.post("/:user/show-interest/:leaseId", async (req, res) => {
       type: "sent",
       text,
     });
+    user.messages[0].recipient = leaseHolder.username;
 
     leaseHolder.messages.unshift(message);
     leaseHolder.messages[0].conversation.push({
       type: "received",
       text,
     });
+    leaseHolder.messages[0].recipient = user.username;
 
     await message.save();
     await user.save();
@@ -240,18 +242,21 @@ router.post("/:user/show-interest/:leaseId", async (req, res) => {
 // REMOVE LEASE FROM LEASES INTERESTED IN
 router.delete("/:user/withdraw-interest/:leaseId", async (req, res) => {
   try {
-    const user = await User.findOne({ username: req.params.user }).select({
-      password: 0,
-    });
+    const user = await User.findOne({ username: req.params.user })
+      .populate("leaseInterestedIn")
+      .populate("listedLease")
+      .select({
+        password: 0,
+      });
 
     const updatedLeasesInterestedIn = user.leaseInterestedIn.filter((lease) => {
-      if (!user.leaseInterestedIn.includes(req.params.leaseId)) return true;
+      if (lease._id !== req.params.leaseId) return true;
     });
 
     user.leaseInterestedIn = [...updatedLeasesInterestedIn];
 
-    await user.execPopulate("leaseInterestedIn");
-    await user.execPopulate("listedLease");
+    // await user.execPopulate("leaseInterestedIn");
+    // await user.execPopulate("listedLease");
     await user.save();
 
     return res.send(user);
