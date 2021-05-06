@@ -4,7 +4,8 @@ const Joi = require("joi");
 const reviewSchema = mongoose.Schema({
     review_by: {type: String},
     review_date: {type: Date, default: Date.now()},
-    review_comment: {type: String, minlength:5, maxlength: 500, required: true}
+    review_text: {type: String, minlength:5, maxlength: 500, required: true},
+    star_rating: {type: Number, maxlength: 5}
 });
 
 const Review = mongoose.model("Review", reviewSchema);
@@ -13,6 +14,7 @@ const Review = mongoose.model("Review", reviewSchema);
 const validateReview = (review) => {
     const schema = Joi.object({
         review_comment: Joi.string().min(5).max(500).required(),
+        star_rating: Joi.Number().max(5).required()
     });
     return schema.validate(review);
 }

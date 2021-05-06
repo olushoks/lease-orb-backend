@@ -8,6 +8,7 @@ const multer = require("multer");
 
 const connectDB = require("./starter/db");
 const users = require("./routes/users");
+const reviews = require("./routes/reviews");
 const auth = require("./routes/auth");
 
 // CONNECTT TO DATABASE
@@ -29,6 +30,7 @@ const upload = multer({stroage: storage});
 // ROUTES
 app.use("/api/users", users);
 app.use("/api/auth", auth);
+app.use("/api/reviews")
 
 // INITIATE PORT
 const PORT = process.env.PORT || 5000;

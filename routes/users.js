@@ -9,7 +9,6 @@ const auth = require("../middleware/auth");
 const { User, validateUser } = require("../model/user");
 const { Lease, validateLease } = require("../model/lease");
 const { Message, validateMessage } = require("../model/message");
-const { sensitiveHeaders } = require("http2");
 
 // USER SIGN-UP (CREATE NEW ACCOUNT)
 router.post("/sign-up", async (req, res) => {
@@ -142,7 +141,7 @@ router.delete("/:user/delist-lease/:leaseId", async (req, res) => {
 
     users.map((user) => {
       const updatedInterest = user.leaseInterestedIn.filter((lease) => {
-        if (lease.id !== id) return true;
+        if (lease.id != id) return true;
       });
       user.leaseInterestedIn = [...updatedInterest];
       user.save();
