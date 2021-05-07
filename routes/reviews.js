@@ -31,4 +31,15 @@ router.post("/:user", async (req, res) => {
     }
 })
 
+// SEARCH AND RETURN ALL REVIEWS
+router.get("/", async (req, res) => {
+    try {
+        const reviews = await Review.find();
+
+        return res.status(201).send(reviews)
+    } catch (error) {
+        return res.status(500).send(`Internal server error: ${error}`)
+    }
+})
+
 module.exports = router;
