@@ -30,7 +30,7 @@ const upload = multer({stroage: storage});
 // ROUTES
 app.use("/api/users", users);
 app.use("/api/auth", auth);
-app.use("/api/reviews")
+app.use("/api/reviews", reviews)
 
 // INITIATE PORT
 const PORT = process.env.PORT || 5000;
