@@ -17,7 +17,7 @@ const userSchema = new mongoose.Schema({
     type: String,
     minlength: 8,
     required: true,
-    select: false,
+    //select: false,
   },
   listedLease: [{ type: mongoose.Schema.Types.ObjectId, ref: "Lease" }],
   leaseInterestedIn: [{ type: mongoose.Schema.Types.ObjectId, ref: "Lease" }],

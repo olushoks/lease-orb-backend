@@ -228,7 +228,6 @@ router.post("/:user/show-interest/:leaseId", async (req, res) => {
     });
     leaseHolder.messages[0].recipient = user.username;
 
-    await message.save();
     await user.save();
     await leaseHolder.save();
 
@@ -249,16 +248,14 @@ router.delete("/:user/withdraw-interest/:leaseId", async (req, res) => {
       });
 
     const updatedLeasesInterestedIn = user.leaseInterestedIn.filter((lease) => {
-      if (lease != req.params.leaseId) return true;
+      if (lease._id != req.params.leaseId) return true;
     });
 
     user.leaseInterestedIn = [...updatedLeasesInterestedIn];
 
-    // await user.execPopulate("leaseInterestedIn");
-    // await user.execPopulate("listedLease");
     await user.save();
 
-    return res.send(user.leaseInterestedIn);
+    return res.send(user);
   } catch (error) {
     return res.status(500).send(`Internal Server Error: ${error}`);
   }
