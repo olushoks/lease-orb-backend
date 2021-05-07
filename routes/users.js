@@ -9,7 +9,6 @@ const auth = require("../middleware/auth");
 const { User, validateUser } = require("../model/user");
 const { Lease, validateLease } = require("../model/lease");
 const { Message, validateMessage } = require("../model/message");
-const { sensitiveHeaders } = require("http2");
 
 // USER SIGN-UP (CREATE NEW ACCOUNT)
 router.post("/sign-up", async (req, res) => {
@@ -142,7 +141,7 @@ router.delete("/:user/delist-lease/:leaseId", async (req, res) => {
 
     users.map((user) => {
       const updatedInterest = user.leaseInterestedIn.filter((lease) => {
-        if (lease.id !== id) return true;
+        if (lease.id != id) return true;
       });
       user.leaseInterestedIn = [...updatedInterest];
       user.save();
@@ -250,7 +249,7 @@ router.delete("/:user/withdraw-interest/:leaseId", async (req, res) => {
       });
 
     const updatedLeasesInterestedIn = user.leaseInterestedIn.filter((lease) => {
-      if (lease._id !== req.params.leaseId) return true;
+      if (lease != req.params.leaseId) return true;
     });
 
     user.leaseInterestedIn = [...updatedLeasesInterestedIn];
@@ -259,7 +258,7 @@ router.delete("/:user/withdraw-interest/:leaseId", async (req, res) => {
     // await user.execPopulate("listedLease");
     await user.save();
 
-    return res.send(user);
+    return res.send(user.leaseInterestedIn);
   } catch (error) {
     return res.status(500).send(`Internal Server Error: ${error}`);
   }
@@ -270,10 +269,13 @@ router.post(
   "/:sender/reply-message/:message_id/:receiver",
   async (req, res) => {
     try {
-      const [sender] = await User.find({ username: req.params.sender });
+      const [sender] = await User.find({ username: req.params.sender }).select({
+        password: 0,
+      });
+
       const [receiver] = await User.find({
         username: req.params.receiver,
-      });
+      }).select({ password: 0 });
 
       const text = req.body.text;
 
