@@ -47,6 +47,18 @@ router.post("/sign-up", async (req, res) => {
   }
 });
 
+// FETCH SINGLE USER FOR SILENT PAGE REFRESH
+router.get("/:user", async (req, res) => {
+  try {
+    const username = req.params.user;
+    const user = await User.findOne({ username }).select({ password: 0 });
+
+    return res.status(201).send(user);
+  } catch (error) {
+    res.status(500).send(`Internal server error: ${error}`);
+  }
+});
+
 // LIST LEASE
 router.post("/:user/list-lease", async (req, res) => {
   try {
