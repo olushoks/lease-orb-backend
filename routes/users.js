@@ -51,7 +51,12 @@ router.post("/sign-up", async (req, res) => {
 router.get("/:user", async (req, res) => {
   try {
     const username = req.params.user;
-    const user = await User.findOne({ username }).select({ password: 0 });
+    const user = await User.findOne({ username })
+      .populate("leaseInterestedIn")
+      .populate("listedLease")
+      .select({ password: 0 });
+
+    if (!user) return res.status(400).send("user not found");
 
     return res.status(201).send(user);
   } catch (error) {
@@ -88,11 +93,6 @@ router.post("/:user/list-lease", async (req, res) => {
         additionalInfo: req.body.additionalInfo,
         lat: req.body.lat,
         lng: req.body.lng,
-        // images: {
-        //   data: fs.readFileSync(
-        //     path.join(__dirname + "/uploads/" + req.file.filename)
-        //   ),
-        // },
       });
 
       lease.save((err) => {
@@ -220,7 +220,7 @@ router.post("/:user/show-interest/:leaseId", async (req, res) => {
     });
 
     const message = new Message({
-      title: `From ${user.username} for ${lease.name}`,
+      title: `${user.username} for ${lease.name}`,
       conversation: [],
     });
 
@@ -275,28 +275,28 @@ router.delete("/:user/withdraw-interest/:leaseId", async (req, res) => {
 
 // REPLY TO MESSAGE(S)
 router.post(
-  "/:sender/reply-message/:message_id/:receiver",
+  "/:sender/reply-message/:message_id/:recipient",
   async (req, res) => {
     try {
       const [sender] = await User.find({ username: req.params.sender }).select({
         password: 0,
       });
 
-      const [receiver] = await User.find({
-        username: req.params.receiver,
+      const [recipient] = await User.find({
+        username: req.params.recipient,
       }).select({ password: 0 });
 
       const text = req.body.text;
 
       const senderMessage = sender.messages.id(req.params.message_id);
 
-      const receiverMessage = receiver.messages.id(req.params.message_id);
+      const recipientMessage = recipient.messages.id(req.params.message_id);
 
       senderMessage.conversation.push({ type: "sent", text });
-      receiverMessage.conversation.push({ type: "received", text });
+      recipientMessage.conversation.push({ type: "received", text });
 
       await sender.save();
-      await receiver.save();
+      await recipient.save();
 
       return res.send(sender);
     } catch (error) {
