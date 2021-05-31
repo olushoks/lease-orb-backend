@@ -305,4 +305,15 @@ router.post(
   }
 );
 
+// FETCH ALL MESSAGES FOR A PARTCULAR USER
+router.get("/:user/messages", async (req, res) => {
+  try {
+    const user = await User.find({ username: req.params.user });
+
+    return res.status(200).send(user[0].messages);
+  } catch (error) {
+    return res.status(500).send(`Internal Server Error`);
+  }
+});
+
 module.exports = router;
